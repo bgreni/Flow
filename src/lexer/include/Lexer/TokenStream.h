@@ -4,7 +4,7 @@
 #include <string_view>
 #include <string>
 
-class TokenStream : public std::string_view {
+class TokenStream : private std::string_view {
 public:
     TokenStream(std::string && input) : std::string_view(input){}
 

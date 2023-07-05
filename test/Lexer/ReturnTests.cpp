@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "LexerTestUtils.h"
+#include "TestCommon/Common.h"
 
 #define CLASS Lexer_ReturnTests
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "Token/Token.h"
 #include <vector>
+#include "Common/Types.h"
 
 struct Node {
     Node(const FlowToken::Token & token) : token(token){}
@@ -11,11 +12,15 @@ struct Node {
     FlowToken::Token token;
 };
 
-struct Statement : Node{};
-struct Expression : Node{};
+struct Statement : Node {
+    Statement(const FlowToken::Token & token) : Node(token){}
+};
+struct Expression : Node {
+    Expression(const FlowToken::Token & token) : Node(token){}
+};
 
-struct Program : Node {
-    std::string toString() override {
+struct Program {
+    std::string toString() {
         std::string out;
         for (const auto & s : statements) {
             out += s->toString();
@@ -23,5 +28,5 @@ struct Program : Node {
         return out;
     }
 
-    std::vector<std::unique_ptr<Statement>> statements;
+    std::vector<ptr<Statement>> statements;
 };

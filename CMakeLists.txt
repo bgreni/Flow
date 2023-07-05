@@ -21,7 +21,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_subdirectory(src)
 add_executable(${TARGET} main.cpp)
-target_link_libraries(${TARGET} Lexer)
+target_link_libraries(${TARGET} Lexer Parser)
 
 
 set(BUILD_TEST ON CACHE BOOL "Whether to build tests")

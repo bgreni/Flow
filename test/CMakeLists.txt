@@ -9,5 +9,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 
 add_subdirectory(Lexer)
+add_subdirectory(Parser)
+add_subdirectory(TestCommon)
 # include(GoogleTests)
 # gtest_discover_tests(declaration_test)

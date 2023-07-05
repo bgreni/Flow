@@ -4,7 +4,7 @@ add_library(${PROJECT_NAME} STATIC)
 
 file(GLOB_RECURSE SRC CONFIGURE_DEPENDS "*.h" "*.cpp")
 
-target_link_libraries(${PROJECT_NAME} Token fmt::fmt)
+target_link_libraries(${PROJECT_NAME} Token fmt::fmt Common)
 
 target_sources(
     ${PROJECT_NAME}

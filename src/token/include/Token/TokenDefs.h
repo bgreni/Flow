@@ -12,6 +12,7 @@ namespace FlowToken {
         IDENT,
         LET,
         SEMICOLON,
+        COLON,
         LBRACK,
         RBRACK,
         LPAREN,
@@ -31,10 +32,9 @@ namespace FlowToken {
         STREAMOUT,
         GT,
         LT,
+        BANG,
 
         // keywords
-        // types
-        INT,
         RETURN,
         FUNCTION,
     };
@@ -47,6 +47,7 @@ namespace FlowToken {
         STRINGIFY(IDENT),
         STRINGIFY(LET),
         STRINGIFY(SEMICOLON),
+        STRINGIFY(COLON),
         STRINGIFY(LBRACK),
         STRINGIFY(RBRACK),
         STRINGIFY(LPAREN),
@@ -64,8 +65,8 @@ namespace FlowToken {
         STRINGIFY(STREAMOUT),
         STRINGIFY(GT),
         STRINGIFY(LT),
+        STRINGIFY(BANG),
 
-        STRINGIFY(INT),
         STRINGIFY(RETURN),
         STRINGIFY(FUNCTION),
     };

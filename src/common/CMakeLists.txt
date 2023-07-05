@@ -1,4 +1,4 @@
-project(Parser)
+project(Common)
 
 add_library(${PROJECT_NAME} STATIC)
 
@@ -15,8 +15,6 @@ target_include_directories(
     PRIVATE
     # where the library itself will look for its internal headers
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/Parser
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/Common
     PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/include)
-
-target_link_libraries(${PROJECT_NAME} Token Lexer Ast Common)

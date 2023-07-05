@@ -5,11 +5,11 @@
 #include "Lexer/Lexer.h"
 #include <exception>
 
-#define SETUP(str) \
-    auto lexer = Lexer(std::move(str)); \
-    const auto actual = lexer.tokenize();
 
-#define TOK(t, l) FlowToken::Token(FlowToken::Type::t, l)
+#define SETUP(str) \
+    auto t = str; \
+    auto lexer = Lexer(std::move(t)); \
+    const auto actual = lexer.tokenize();
 
 #define TRY try {
 #define CATCH \

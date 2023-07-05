@@ -6,7 +6,6 @@ namespace FlowToken {
     const auto cKeywords = std::unordered_map<std::string, Type>
     {
         {"let", Type::LET},
-        {"int", Type::INT},
         {"return", Type::RETURN},
         {"fn", Type::FUNCTION}
     };

@@ -1,12 +1,12 @@
 #include <gtest/gtest.h>
 #include "LexerTestUtils.h"
 #include "Token/Token.h"
+#include "TestCommon/Operators.h"
 
 #define CLASS Lexer_OperatorTests
 
 TEST(CLASS, PlusInts) {
-    std::string input = "10 + 34;";
-    SETUP(input)
+    SETUP(TestCase::ADD_INTS)
     const auto expected = FlowToken::Tokens{
         TOK(INT_LIT, "10"),
         TOK(PLUS, "+"),
@@ -18,8 +18,7 @@ TEST(CLASS, PlusInts) {
 }
 
 TEST(CLASS, MinusInts) {
-    std::string input = "443 - 2342;";
-    SETUP(input)
+    SETUP(TestCase::SUB_INTS)
     const auto expected = FlowToken::Tokens {
         TOK(INT_LIT, "443"),
         TOK(MINUS, "-"),
@@ -31,8 +30,7 @@ TEST(CLASS, MinusInts) {
 }
 
 TEST(CLASS, MultiplyInts) {
-    std::string input = "898 * 9834;";
-    SETUP(input)
+    SETUP(TestCase::MULT_INTS)
     const auto expected = FlowToken::Tokens {
         TOK(INT_LIT, "898"),
         TOK(ASTERISK, "*"),
@@ -44,8 +42,7 @@ TEST(CLASS, MultiplyInts) {
 }
 
 TEST(CLASS, DivideInts) {
-    std::string input = "32 / 23;";
-    SETUP(input)
+    SETUP(TestCase::DIV_INTS)
     const auto expected = FlowToken::Tokens {
         TOK(INT_LIT, "32"),
         TOK(SLASH, "/"),
@@ -57,10 +54,7 @@ TEST(CLASS, DivideInts) {
 }
 
 TEST(CLASS, LtTest) {
-    std::string input =
-        "1 < 3;\n"
-        "a << fTwo();";
-    SETUP(input)
+    SETUP(TestCase::LT_TEST)
     const auto expected = FlowToken::Tokens {
         TOK(INT_LIT, "1"),
         TOK(LT, "<"),
@@ -75,4 +69,33 @@ TEST(CLASS, LtTest) {
         TOK(END, "")
     };
     CHECK
-}   
+}
+
+TEST(CLASS, GtTest) {
+    SETUP(TestCase::GT_TEST);
+    const auto expected = FlowToken::Tokens {
+        TOK(INT_LIT, "3"),
+        TOK(GT, ">"),
+        TOK(INT_LIT, "2"),
+        TOK(SEMICOLON, ';'),
+        TOK(INT_LIT, "10"),
+        TOK(STREAMIN, ">>"),
+        TOK(IDENT, "fOne"),
+        TOK(LPAREN, "("),
+        TOK(RPAREN, ")"),
+        TOK(SEMICOLON, ';'),
+        TOK(END, "")
+    };
+    CHECK
+}
+
+TEST(CLASS, BangTest) {
+    SETUP(TestCase::BANG_TEST)
+    const auto expected = FlowToken::Tokens {
+        TOK(BANG, "!"),
+        TOK(IDENT, "condition"),
+        TOK(SEMICOLON, ";"),
+        TOK(END, "")
+    };
+    CHECK
+}

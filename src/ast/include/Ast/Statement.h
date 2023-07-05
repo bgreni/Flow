@@ -4,23 +4,52 @@
 #include "fmt/core.h"
 
 
-struct ExpressionStatement : Statement {
-    std::string toString () {
-        return expression ? expression->toString() : "";
+// struct ExpressionStatement : Statement {
+//     std::string toString () {
+//         return expression ? expression->toString() : "";
+//     }
+
+//     ptr<Expression> expression;
+// };
+
+struct ReturnStatement : Statement {
+    ReturnStatement(
+        const FlowToken::Token & token,
+        ptr<Expression> && value
+    )
+    : Statement(token)
+    , value(std::move(value))
+    {}
+
+    std::string toString() override {
+        return "return " + value->toString() + ";";
     }
 
-    std::unique_ptr<Expression> expression;
+    ptr<Expression> value;
 };
 
 struct LetStatement : Statement {
+    LetStatement(
+        const FlowToken::Token & token,
+        ptr<Identifier> && name,
+        ptr<Identifier> && type,
+        ptr<Expression> && value)
+    : Statement(std::move(token))
+    , name(std::move(name))
+    , type(std::move(type))
+    , value(std::move(value))
+    {}
+
     std::string toString() override {
         return fmt::format(
-            "{} {} = {};",
+            "{} {}: {} = {};",
             tokenLiteral(),
-            name.toString(),
-            value ? value->toString() : "");   
+            name->toString(),
+            type->toString(),
+            value->toString());
     }
 
-    Identifier name;
-    std::unique_ptr<Expression> value;
+    ptr<Identifier> name;
+    ptr<Identifier> type;
+    ptr<Expression> value;
 };

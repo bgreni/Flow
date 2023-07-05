@@ -7,7 +7,7 @@ class Lexer {
 public:
     Lexer(std::string && stream)
         : mStream(std::move(stream))
-    {}
+    {readChar();}
     FlowToken::Token nextToken();
     bool readChar();
     FlowToken::Tokens tokenize();

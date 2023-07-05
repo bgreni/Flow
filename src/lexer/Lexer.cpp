@@ -11,7 +11,6 @@ bool Lexer::readChar() {
 }
 
 Tokens Lexer::tokenize() {
-    readChar();
     Tokens out;
     while (auto t = nextToken()) {
         out.emplace_back(t);
@@ -35,6 +34,9 @@ Token Lexer::nextToken() {
     switch (mCurChar) {
         case '=':
             t = Type::ASSIGN;
+            break;
+        case ':':
+            t = Type::COLON;
             break;
         case ';':
             t = Type::SEMICOLON;
@@ -63,6 +65,9 @@ Token Lexer::nextToken() {
         case ')':
             t = Type::RPAREN;
             break;
+        case '!':
+            t = Type::BANG;
+            break;
         case '<':
             switch (mStream.peek()) {
                 case '<':
@@ -72,6 +77,17 @@ Token Lexer::nextToken() {
                     break;
                 default:
                     t = Type::LT;
+            }
+            break;
+        case '>':
+            switch (mStream.peek()) {
+                case '>':
+                    t = Type::STREAMIN;
+                    literal = ">>";
+                    readChar();
+                    break;
+                default:
+                    t = Type::GT;
             }
             break;
         default:
