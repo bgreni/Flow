@@ -1,14 +1,37 @@
 #include "Lexer/Lexer.h"
 #include "Parser/Parser.h"
+#include <cstdio>
+#include <fstream>
 #include <iostream>
+#include "Ast/Llvm.h"
+#include "Ast/Exceptions.h"
 
-int main() {
-    std::string input = "return !a;";
+int main(int argc, char** argv) {
+    const auto filename = std::string(argv[1]);
+    
+    auto file = std::ifstream(filename);
+
+    std::string input;
+    std::string line;
+
+    while (getline(file, line)) {
+        input += line;
+    }
+
+    file.close();
+
+
     auto lexer = Lexer(std::move(input));
     auto parser = Parser(std::move(lexer));
 
     auto program = parser.parseProgram();
     std::cout << program->toString() << std::endl;
+    try {
+        auto generator = LLVMGenerator();
+        generator.process(program.get());
+    } catch(const CodeGenError & e) {
+        std::cout << "CodeGen failed: " << e.what() << std::endl;
+    }
 
     return 0;
 }

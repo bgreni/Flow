@@ -32,6 +32,52 @@ TEST(CLASS, ReturnWithBang) {
     RUN(test)
 }
 
-// TEST(CLASS, FuncDeclaration) {
-//     RUN(TestCase::FUNC_DECL)
-// }
+TEST(CLASS, FuncDeclaration) {
+    ParserTestCase test {
+        "fn add() -> int {"
+        "    let a: int = 10;"
+        "    return a;"
+        "}",
+        "fn add() -> int {"
+        "    let a: int = 10;"
+        "    return a;"
+        "}"
+    };
+    RUN(test)
+}
+
+TEST(CLASS, VoidFunc) {
+    ParserTestCase test {
+        "fn add() {"
+        "    let a: int = 10;"
+        "}",
+        "fn add() -> void {"
+        "    let a: int = 10;"
+        "}"
+    };
+    RUN(test)
+}
+
+TEST(CLASS, FuncDeclarationWithArgs) {
+    ParserTestCase test {
+        "fn add(a: int) -> int {"
+        "    return a;"
+        "}",
+        "fn add(a: int) -> int {"
+        "    return a;"
+        "}"
+    };
+    RUN(test)
+}
+
+TEST(CLASS, LamdaDecl) {
+    ParserTestCase test {
+        "let func: lambda = fn(a: int) -> int {\n"
+        "    return a;\n"
+        "};",
+        "let func: lambda = fn(a: int) -> int {"
+        "    return a;"
+        "};"
+    };
+    RUN(test)
+}

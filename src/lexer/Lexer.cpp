@@ -4,9 +4,10 @@
 
 using namespace FlowToken;
 
-#define MAKE_TOKEN Token(t, literal)
+#define MAKE_TOKEN Token(t, literal, mLine, mColumn)
 
 bool Lexer::readChar() {
+    ++mColumn;
     return bool(mStream.getChar(mCurChar));
 }
 
@@ -15,7 +16,7 @@ Tokens Lexer::tokenize() {
     while (auto t = nextToken()) {
         out.emplace_back(t);
     }
-    out.emplace_back(Token(Type::END, ""));
+    out.emplace_back(Token(Type::END, "", mLine, mColumn));
     return out;
 }
 
@@ -23,7 +24,7 @@ Tokens Lexer::tokenize() {
 Token Lexer::nextToken() {
 
     if (mCurChar == 0) {
-        return Token(Type::END, "");
+        return Token(Type::END, "", mLine, mColumn);
     }
 
     skipWhitespace();
@@ -33,7 +34,16 @@ Token Lexer::nextToken() {
 
     switch (mCurChar) {
         case '=':
-            t = Type::ASSIGN;
+            
+            switch(mStream.peek()) {
+                case '=':
+                    t = Type::EQUALS;
+                    literal = "==";
+                    readChar();
+                    break;
+                default:
+                    t = Type::ASSIGN;
+            }
             break;
         case ':':
             t = Type::COLON;
@@ -45,7 +55,15 @@ Token Lexer::nextToken() {
             t = Type::PLUS;
             break;
         case '-':
-            t = Type::MINUS;
+            switch (mStream.peek()) {
+                case '>':
+                    t = Type::ARROW;
+                    literal = "->";
+                    readChar();
+                    break;
+                default:
+                    t = Type::MINUS;
+            }
             break;
         case '*':
             t = Type::ASTERISK;
@@ -66,7 +84,18 @@ Token Lexer::nextToken() {
             t = Type::RPAREN;
             break;
         case '!':
-            t = Type::BANG;
+            switch (mStream.peek()) {
+                case '=':
+                    t = Type::NOT_EQUALS;
+                    literal = "!=";
+                    readChar();
+                    break;
+                default:
+                    t = Type::BANG;
+            }
+            break;
+        case ',':
+            t = Type::COMMA;
             break;
         case '<':
             switch (mStream.peek()) {
@@ -112,6 +141,7 @@ Token Lexer::nextToken() {
 
 void Lexer::skipWhitespace() {
     while (std::isspace(mCurChar)) {
+        if (mCurChar == '\n' || mCurChar == '\r') { ++mLine; mColumn = 0; }
         if (!readChar()) break;
     }
 }

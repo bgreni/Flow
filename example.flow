@@ -1,0 +1,9 @@
+
+fn getNum() -> int {
+    return 123;
+}
+
+fn main() -> int {
+    print(getNum());
+    return 0;
+}

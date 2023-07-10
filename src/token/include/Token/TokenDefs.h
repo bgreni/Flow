@@ -17,6 +17,8 @@ namespace FlowToken {
         RBRACK,
         LPAREN,
         RPAREN,
+        COMMA,
+        ARROW,
 
         // literals
         INT_LIT,
@@ -24,6 +26,7 @@ namespace FlowToken {
         // operators
         ASSIGN,
         EQUALS,
+        NOT_EQUALS,
         PLUS,
         MINUS,
         ASTERISK,
@@ -37,6 +40,10 @@ namespace FlowToken {
         // keywords
         RETURN,
         FUNCTION,
+        // types
+        INT,
+        VOID,
+        LAMBDA,
     };
 
     #define STRINGIFY(name) #name
@@ -52,11 +59,14 @@ namespace FlowToken {
         STRINGIFY(RBRACK),
         STRINGIFY(LPAREN),
         STRINGIFY(RPAREN),
+        STRINGIFY(COMMA),
+        STRINGIFY(ARROW),
 
         STRINGIFY(INT_LIT),
 
         STRINGIFY(ASSIGN),
         STRINGIFY(EQUALS),
+        STRINGIFY(NOT_EQUALS),
         STRINGIFY(PLUS),
         STRINGIFY(MINUS),
         STRINGIFY(ASTERISK),
@@ -69,6 +79,9 @@ namespace FlowToken {
 
         STRINGIFY(RETURN),
         STRINGIFY(FUNCTION),
+        STRINGIFY(INT),
+        STRINGIFY(VOID),
+        STRINGIFY(LAMBDA),
     };
 
     static const char* toString(Type t) {

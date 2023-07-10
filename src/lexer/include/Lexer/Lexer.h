@@ -18,4 +18,7 @@ private:
 
     TokenStream mStream;
     char mCurChar;
+
+    unsigned int mLine = 1;
+    unsigned int mColumn = 0;
 };

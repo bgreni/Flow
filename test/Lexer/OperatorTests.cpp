@@ -99,3 +99,29 @@ TEST(CLASS, BangTest) {
     };
     CHECK
 }
+
+TEST(CLASS, Eq) {
+    std::string input = "a == b;";
+    SETUP(input)
+    const auto expected = FlowToken::Tokens {
+        TOK(IDENT, "a"),
+        TOK(EQUALS, "=="),
+        TOK(IDENT, "b"),
+        TOK(SEMICOLON, ";"),
+        TOK(END, "")
+    };
+    CHECK
+}
+
+TEST(CLASS, NotEq) {
+    std::string input = "a != b;";
+    SETUP(input)
+    const auto expected = FlowToken::Tokens {
+        TOK(IDENT, "a"),
+        TOK(NOT_EQUALS, "!="),
+        TOK(IDENT, "b"),
+        TOK(SEMICOLON, ";"),
+        TOK(END, "")
+    };
+    CHECK
+}

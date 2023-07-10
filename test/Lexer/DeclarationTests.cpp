@@ -24,7 +24,7 @@ TEST(CLASS, LetIntLitWithType) {
         TOK(LET, "let"),
         TOK(IDENT, "a"),
         TOK(COLON, ":"),
-        TOK(IDENT, "int"),
+        TOK(INT, "int"),
         TOK(ASSIGN, "="),
         TOK(INT_LIT, "10"),
         TOK(SEMICOLON, ';'),
@@ -42,6 +42,49 @@ TEST(CLASS, FuncDecl) {
         TOK(RPAREN, ")"),
         TOK(LBRACK, "{"),
         TOK(RBRACK, "}"),
+        TOK(END, "")
+    };
+    CHECK
+}
+
+TEST(CLASS, FuncWithType) {
+    std::string input = "fn func() -> int { return 10; }";
+    SETUP(input)
+    const auto expected = FlowToken::Tokens {
+        TOK(FUNCTION, "fn"),
+        TOK(IDENT, "func"),
+        TOK(LPAREN, "("),
+        TOK(RPAREN, ")"),
+        TOK(ARROW, "->"),
+        TOK(INT, "int"),
+        TOK(LBRACK, "{"),
+        TOK(RETURN, "return"),
+        TOK(INT_LIT, "10"),
+        TOK(SEMICOLON, ";"),
+        TOK(RBRACK, "}"),
+        TOK(END, "")
+    };
+    CHECK
+}
+
+TEST(CLASS, LambdaFuncDecl) {
+    std::string input = "let fun = fn() -> int { return 10; };";
+    SETUP(input)
+    const auto expected = FlowToken::Tokens {
+        TOK(LET, "let"),
+        TOK(IDENT, "fun"),
+        TOK(ASSIGN, "="),
+        TOK(FUNCTION, "fn"),
+        TOK(LPAREN, "("),
+        TOK(RPAREN, ")"),
+        TOK(ARROW, "->"),
+        TOK(INT, "int"),
+        TOK(LBRACK, "{"),
+        TOK(RETURN, "return"),
+        TOK(INT_LIT, "10"),
+        TOK(SEMICOLON, ";"),
+        TOK(RBRACK, "}"),
+        TOK(SEMICOLON, ";"),
         TOK(END, "")
     };
     CHECK
