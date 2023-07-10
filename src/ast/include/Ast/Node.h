@@ -3,7 +3,7 @@
 #include <vector>
 #include "Common/Types.h"
 #include "llvm/IR/Constants.h"
-#include "Ast/Llvm.h"
+#include "../../../codegen/include/CodeGen/Llvm.h"
 
 #define ACCEPT llvm::Value * accept(LLVMGenerator * v) override { \
     return v->visit(this); \

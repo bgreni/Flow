@@ -3,7 +3,7 @@
 #include <cstdio>
 #include <fstream>
 #include <iostream>
-#include "Ast/Llvm.h"
+#include "src/codegen/include/CodeGen/Llvm.h"
 #include "Ast/Exceptions.h"
 
 int main(int argc, char** argv) {
@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
     auto parser = Parser(std::move(lexer));
 
     auto program = parser.parseProgram();
-    std::cout << program->toString() << std::endl;
+
     try {
         auto generator = LLVMGenerator();
         generator.process(program.get());

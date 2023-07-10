@@ -1,17 +1,19 @@
-#include "Llvm.h"
-#include "Exceptions.h"
-#include "Expressions/FunctionInvokation.h"
-#include "Statements/FunctionDefinition.h"
+#include "include/CodeGen/Llvm.h"
+#include "Ast/Exceptions.h"
+#include "Ast/Expressions/FunctionInvokation.h"
+#include "Ast/Statements/FunctionDefinition.h"
 #include "Token/TokenDefs.h"
 #include "fmt/core.h"
-#include "Expression.h"
-#include "Statement.h"
-#include "Node.h"
+#include "Ast/Expression.h"
+#include "Ast/Statement.h"
+#include "Ast/Node.h"
 #include <cstddef>
 #include <fstream>
 #include <ios>
 #include <iostream>
 #include <system_error>
+#include "GlobalDeclarationsPass.h"
+#include "Utils.h"
 
 
 #define THROW(msg, tok) \
@@ -24,17 +26,6 @@
         ) \
     )
 
-#define LOG(str) std::cout << str << std::endl;
-
-llvm::Type * LLVMGenerator::getLLVMType(FlowToken::Type t) {
-    switch (t) {
-        case FlowToken::Type::INT:
-            return llvm::Type::getInt64Ty(context);
-        default:
-            return llvm::Type::getVoidTy(context);
-    }
-}
-
 void LLVMGenerator::initRuntime() {
     using namespace llvm;
     
@@ -42,7 +33,6 @@ void LLVMGenerator::initRuntime() {
         FunctionType::get(
             IntegerType::getInt32Ty(context),
             std::vector<Type *>{Type::getInt8PtrTy(context)},
-            // {PointerType::get(Type::getInt8Ty(context), 0)},
             true),
             llvm::Function::ExternalLinkage,
             "printf",
@@ -58,47 +48,68 @@ void LLVMGenerator::initRuntime() {
 
      auto BB = llvm::BasicBlock::Create(context, "entry",inz);
      builder.SetInsertPoint(BB);
-//    auto globalEntry = llvm::BasicBlock::Create(context, "entry");
-//    builder.SetInsertPoint(globalEntry);
 
     auto str = builder.CreateGlobalString("%ld\n");
-    namedValues["printStr"] = str;
-
-    // builder.CreateCall(printf, {str});
-
-    // builder.CreateRetVoid();
+    globalValues["printStr"] = str;
 }
 
 void LLVMGenerator::process(Program * program) {
     initRuntime();
+
+    GlobalDeclarationsPass().run(program, context, module, builder);
+
     for (const auto & stmt : program->statements) {
         stmt->accept(this);
     }
 
     std::string errors;
-    // llvm::raw_string_ostream out(errors);
-    // if (llvm::verifyModule(module, &out)) {
-    //     throw CodeGenError(out.str());
-    // }
+     llvm::raw_string_ostream outs(errors);
+     if (llvm::verifyModule(module, &outs)) {
+         throw CodeGenError(outs.str());
+     }
     std::error_code c;
     llvm::raw_fd_ostream out("../out.ll", c);
     module.print(out, nullptr);
+}
+
+llvm::Value * LLVMGenerator::visit(BinaryOp * op) {
+    auto leftVal = op->left->accept(this);
+    auto rightVal = op->right->accept(this);
+
+    using namespace FlowToken;
+    switch (op->token.type) {
+        case Type::PLUS:
+            return builder.CreateAdd(leftVal, rightVal);
+        case Type::ASTERISK:
+            return builder.CreateMul(leftVal, rightVal);
+        default:
+            THROW(fmt::format("operator '{}' not defined", op->tokenLiteral()), op->token);
+    }
 }
 
 llvm::Value * LLVMGenerator::visit(IntegerLiteral * integer) {
     return builder.getInt64(integer->value);
 }
 
-// llvm::Value * LLVMGenerator::visit(Identifier * ident) {
-//     auto named = namedValues.get(ident->tokenLiteral());
-//     if (!named) {
-//         THROW(
-//             fmt::format("Symbol not defined: {}", ident->tokenLiteral()),
-//             ident->token);
-//     }
+ llvm::Value * LLVMGenerator::visit(Identifier * ident) {
+     auto named = localValues.get(ident->tokenLiteral());
+     if (!named) {
+         THROW(
+             fmt::format("Symbol not defined: {}", ident->tokenLiteral()),
+             ident->token);
+     }
 
-//     // auto ft = llvm::FunctionType::get();
-// }
+     return builder.CreateLoad(named.value()->getType(), named.value());
+ }
+
+llvm::Value * LLVMGenerator::visit(LetStatement * ls) {
+    auto value = ls->value->accept(this);
+    const auto varName = ls->name->tokenLiteral();
+    auto ai = builder.CreateAlloca(
+        Utils::getLLVMTypeFromString(ls->name->type, context));
+    localValues[varName] = ai;
+    return builder.CreateStore(value, ai);
+}
 
 llvm::Value * LLVMGenerator::visit(ReturnStatement * ret) {
     auto value = ret->value->accept(this);
@@ -111,7 +122,7 @@ llvm::Value * LLVMGenerator::visit(FunctionInvokation * inv) {
     std::vector<llvm::Value *> funcArgs;
     const auto name = inv->tokenLiteral();
     if (name == "print") {
-        funcArgs.emplace_back(namedValues["printStr"]);
+        funcArgs.emplace_back(globalValues["printStr"]);
         func = builtIns[name];
     }
 
@@ -131,14 +142,13 @@ llvm::Value * LLVMGenerator::visit(FunctionInvokation * inv) {
 
 llvm::Value * LLVMGenerator::visit(ExpressionStatement * es) {
     return es->expr->accept(this);
-    return nullptr;
 }
 
 llvm::Value * LLVMGenerator::visit(FunctionDefinition * def) {
-
+    localValues.clear();
     std::vector<llvm::Type *> params{};
     for (const auto & arg : def->args) {
-        params.emplace_back(getLLVMType(arg->token.type));
+        params.emplace_back(Utils::getLLVMType(arg->token.type, context));
     }
     llvm::Function * func;
     if (def->isMain()) {
@@ -146,17 +156,7 @@ llvm::Value * LLVMGenerator::visit(FunctionDefinition * def) {
         auto & entry = func->getEntryBlock();
         builder.SetInsertPoint(&entry);
     } else {
-        auto fnType = llvm::FunctionType::get(
-            getLLVMType(def->returnType->token.type),
-            false
-        );
-
-        func = llvm::Function::Create(
-            fnType,
-            llvm::Function::ExternalLinkage,
-            def->name->tokenLiteral(),
-            module
-        );
+        func = module.getFunction(def->name->tokenLiteral());
         auto entry = llvm::BasicBlock::Create(context, "entry",func);
         builder.SetInsertPoint(entry);
     }
@@ -165,25 +165,15 @@ llvm::Value * LLVMGenerator::visit(FunctionDefinition * def) {
         THROW(fmt::format("Failed to create function: {}", def->name->tokenLiteral()), def->token);
     }
 
-    // non-void return type must return a value
-    const auto endsWithReturn = !def->body.back()->isReturn();
-    const auto voidFunc = !def->returnType->isVoid();
-    if (!endsWithReturn && !voidFunc) {
-        THROW("Non-void function must return a value", def->name->token);
-    }
+    const auto endsWithReturn = def->body.back()->isReturn();
 
     for (const auto & stmt : def->body) {
         stmt->accept(this);
     }
 
-    // if (voidFunc && !endsWithReturn) {
-    //     builder.CreateRetVoid();   
-    // }
-
-    // if (def->isMain()) {
-    //     std::vector<llvm::Value *> args;
-    //     auto c = builder.CreateCall(func, args);
-    // }
+    if (!endsWithReturn) {
+        builder.CreateRetVoid();
+    }
 
     llvm::verifyFunction(*func);
 

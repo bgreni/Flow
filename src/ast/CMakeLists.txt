@@ -1,10 +1,10 @@
 project(Ast)
 
-add_library(${PROJECT_NAME} STATIC)
+add_library(${PROJECT_NAME} STATIC include/Ast/Node.cpp)
 
 file(GLOB_RECURSE SRC CONFIGURE_DEPENDS "*.h" "*.cpp")
 
-target_link_libraries(${PROJECT_NAME} Token fmt::fmt Common)
+target_link_libraries(${PROJECT_NAME} Token fmt::fmt Common Codegen)
 
 target_sources(
     ${PROJECT_NAME}

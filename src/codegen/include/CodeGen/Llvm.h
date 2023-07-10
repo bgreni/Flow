@@ -7,9 +7,7 @@
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
-#include "llvm/IR/Type.h"
 #include "llvm/IR/Verifier.h"
 #include <memory>
 #include <stdexcept>
@@ -41,16 +39,17 @@ public:
         : context(llvm::LLVMContext())
         , module(llvm::Module("Flow", context))
         , builder(llvm::IRBuilder<>(context))
-        , namedValues()
+        , localValues()
+        , globalValues()
     {}
 
     void initRuntime();
 
-    void process(Program * prog);
+    void process(Program * program);
 
     // expressions
-    TODO(Identifier);
-    TODO(BinaryOp)
+    GEN visit(Identifier * ident);
+    GEN visit(BinaryOp * op);
     TODO(Lambda)
     TODO(IdentifierWithType)
     TODO(PrefixExpression)
@@ -61,15 +60,15 @@ public:
     // statements
     GEN visit(FunctionDefinition * def);
     GEN visit(ReturnStatement * ret);
-    TODO(LetStatement)
+    GEN visit(LetStatement * ls);
     GEN visit(ExpressionStatement * es);
 
 private:
-    llvm::Type * getLLVMType(FlowToken::Type t);
 
     llvm::LLVMContext context;
     llvm::Module module;
     llvm::IRBuilder<> builder;
-    Flow::Map<std::string, llvm::Value *> namedValues;
+    Flow::Map<std::string, llvm::Value *> localValues;
+    Flow::Map<std::string, llvm::Value *> globalValues;
     Flow::Map<std::string, llvm::Function *> builtIns;
 };
