@@ -9,6 +9,8 @@
 #include "Ast/Expressions/StreamOut.h"
 #include "Ast/Expressions/PrefixExpression.h"
 #include "Ast/Expressions/FunctionInvokation.h"
+#include "Ast/Expressions/Array.h"
+#include "Ast/Expressions/FlowType.h"
 
 struct StreamIn : Expression {
 

@@ -14,8 +14,8 @@ namespace Utils {
         }
     }
 
-    static llvm::Type * getLLVMTypeFromString(const std::string & str, llvm::LLVMContext & context) {
-        if (str == "int") {
+    static llvm::Type * getLLVMType(const ptr<FlowType> & type, llvm::LLVMContext & context) {
+        if (auto t = dynamic_cast<IntType *>(type.get())) {
             return llvm::Type::getInt64Ty(context);
         }
         return llvm::Type::getVoidTy(context);

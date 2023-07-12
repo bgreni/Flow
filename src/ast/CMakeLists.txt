@@ -1,6 +1,6 @@
 project(Ast)
 
-add_library(${PROJECT_NAME} STATIC include/Ast/Node.cpp)
+add_library(${PROJECT_NAME} STATIC Node.cpp)
 
 file(GLOB_RECURSE SRC CONFIGURE_DEPENDS "*.h" "*.cpp")
 

@@ -19,6 +19,8 @@ namespace FlowToken {
         RPAREN,
         COMMA,
         ARROW,
+        LSQR,
+        RSQR,
 
         // literals
         INT_LIT,
@@ -40,6 +42,9 @@ namespace FlowToken {
         // keywords
         RETURN,
         FUNCTION,
+        IF,
+        ELIF,
+        ELSE,
         // types
         INT,
         VOID,
@@ -61,6 +66,8 @@ namespace FlowToken {
         STRINGIFY(RPAREN),
         STRINGIFY(COMMA),
         STRINGIFY(ARROW),
+        STRINGIFY(LSQR),
+        STRINGIFY(RSQR),
 
         STRINGIFY(INT_LIT),
 
@@ -79,6 +86,10 @@ namespace FlowToken {
 
         STRINGIFY(RETURN),
         STRINGIFY(FUNCTION),
+        STRINGIFY(IF),
+        STRINGIFY(ELIF),
+        STRINGIFY(ELSE),
+
         STRINGIFY(INT),
         STRINGIFY(VOID),
         STRINGIFY(LAMBDA),

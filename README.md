@@ -18,10 +18,10 @@ let a: int = 10;
 let a: int = 10;
 
 // strings
-let s: str = "hellow world";
+let s: str = "hello world";
 
-// tuples
-let t: (int, int) = (1, 5);
+// arrays
+let arr: [int, 2] = [1, 5];
 ```
 ## Functions
 ```
@@ -31,7 +31,7 @@ fn add(a: int, b: int) -> int {
 ```
 Flow also supports lambda style functions with the following syntax
 ```
-let add = fn(a: int, b: int) -> int {
+let add: lambda = fn(a: int, b: int) -> int {
     return a + b;
 }
 ```
@@ -41,24 +41,31 @@ function, one of which being the namesake of the language.
 
 First the usual syntax
 ```
-let a = add(10, 12);
+let a: int = add(10, 12);
 ```
 #### Flow operator
 Flow takes inspiration from the stream operator in C++ to create a new syntax for invoking a function using the "Flow"(stream) operator
 this allows you to stream function invokations together without needing to either deal with deeply nested function calls, or separate each
 call into its own line, using intermediate variables to caches the results of each invokation
 ```
-let doubleNums = fn(a: int, b: int) {
-    return (a*2, b*2);
+let doubleNums: lambda = fn(a: int, b: int) {
+    return [a*2, b*2];
 }
-let result: int = (10, 20) >> doubleNums() >> doubleNums();
+let result: [int, 2] = [10, 20] >> doubleNums() >> doubleNums();
 // result will be (40, 80);
 ```
-In this example, the tuple (10, 20) is matched to the expected arguments of the "doubleNums" function, and the result of the
+In this example, the array [10, 20] is matched to the expected arguments of the "doubleNums" function, and the result of the
 call is fed into another call to the function, and then the result is assigned to the result var
 
 # Documentation TODO
 - Loops
 - Inline blocks
 - Example full program
+
+# Implementation TODO
+- Proper type checking at the parser level
+- Arrays
+- Flow operator function calls
+- Lambdas
+- Strings
 

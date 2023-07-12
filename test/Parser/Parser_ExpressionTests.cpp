@@ -85,3 +85,11 @@ TEST(CLASS, FuncInvoke) {
     };
     RUN(test)
 }
+
+TEST(CLASS, ArrayLit) {
+    ParserTestCase test {
+        "return [1, 2];",
+        "return [1, 2];"
+    };
+    RUN(test)
+}

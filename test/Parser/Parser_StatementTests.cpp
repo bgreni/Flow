@@ -81,3 +81,31 @@ TEST(CLASS, LamdaDecl) {
     };
     RUN(test)
 }
+
+TEST(CLASS, IfStmt) {
+    ParserTestCase test {
+        "if (a < b) {"
+        "    return 10;"
+        "} elif (a < c) {"
+        "    return 12;"
+        "} else {"
+        "    return 5;"
+        "}",
+        "if ((a < b)) {"
+        "    return 10;"
+        "} elif ((a < c)) {"
+        "    return 12;"
+        "} else {"
+        "    return 5;"
+        "}"
+    };
+    RUN(test)
+}
+
+TEST(CLASS, ArrayDecl) {
+    ParserTestCase test {
+        "let a: [int, 2] = [1, 2];",
+        "let a: [int, 2] = [1, 2];"
+    };
+    RUN(test)
+}

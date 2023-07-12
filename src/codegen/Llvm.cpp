@@ -26,6 +26,16 @@
         ) \
     )
 
+
+llvm::Type * LLVMGenerator::getIntType() {
+    return llvm::IntegerType::getInt64Ty(context);
+}
+
+llvm::ArrayType * LLVMGenerator::getIntArrayType(unsigned int len) {
+    const auto intT = getIntType();
+    return llvm::ArrayType::get(intT, len);
+}
+
 void LLVMGenerator::initRuntime() {
     using namespace llvm;
     
@@ -43,7 +53,7 @@ void LLVMGenerator::initRuntime() {
 
      /* Emit the main function */
     std::vector<llvm::Type*> params;
-    auto ft = llvm::FunctionType::get(llvm::Type::getInt64Ty(context),params,false);
+    auto ft = llvm::FunctionType::get(getIntType(),params,false);
     auto inz = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "main", module);
 
      auto BB = llvm::BasicBlock::Create(context, "entry",inz);
@@ -65,7 +75,8 @@ void LLVMGenerator::process(Program * program) {
     std::string errors;
      llvm::raw_string_ostream outs(errors);
      if (llvm::verifyModule(module, &outs)) {
-         throw CodeGenError(outs.str());
+         module.print(llvm::outs(), nullptr);
+         throw CodeGenError("\n\n\n" + outs.str());
      }
     std::error_code c;
     llvm::raw_fd_ostream out("../out.ll", c);
@@ -76,37 +87,66 @@ llvm::Value * LLVMGenerator::visit(BinaryOp * op) {
     auto leftVal = op->left->accept(this);
     auto rightVal = op->right->accept(this);
 
+#define CREATE_COMP(t) builder.CreateICmp(t, leftVal, rightVal)
+
     using namespace FlowToken;
     switch (op->token.type) {
         case Type::PLUS:
             return builder.CreateAdd(leftVal, rightVal);
         case Type::ASTERISK:
             return builder.CreateMul(leftVal, rightVal);
+        case Type::MINUS:
+            return builder.CreateSub(leftVal, rightVal);
+        case Type::SLASH:
+            return builder.CreateSDiv(leftVal, rightVal);
+        case Type::EQUALS:
+            return CREATE_COMP(llvm::CmpInst::ICMP_EQ);
+        case Type::NOT_EQUALS:
+            return CREATE_COMP(llvm::CmpInst::ICMP_NE);
+        case Type::LT:
+            return CREATE_COMP(llvm::CmpInst::ICMP_SLT);
+        case Type::GT:
+            return CREATE_COMP(llvm::CmpInst::ICMP_SGT);
         default:
             THROW(fmt::format("operator '{}' not defined", op->tokenLiteral()), op->token);
     }
+#undef CREATE_COMP
 }
 
 llvm::Value * LLVMGenerator::visit(IntegerLiteral * integer) {
     return builder.getInt64(integer->value);
 }
 
+llvm::Value * LLVMGenerator::visit(Array * arr) {
+//    std::vector<llvm::Constant *> values;
+//    for (const auto & val : arr->values) {
+//        values.emplace_back(val->accept(this));
+//    }
+}
+
  llvm::Value * LLVMGenerator::visit(Identifier * ident) {
+    if (auto arg = funcArgs.get(ident->tokenLiteral())) {
+        return arg.value();
+    }
+
      auto named = localValues.get(ident->tokenLiteral());
+
      if (!named) {
          THROW(
              fmt::format("Symbol not defined: {}", ident->tokenLiteral()),
              ident->token);
      }
 
-     return builder.CreateLoad(named.value()->getType(), named.value());
+     auto val = named.value();
+
+     return builder.CreateLoad(val->getType(), named.value());
  }
 
 llvm::Value * LLVMGenerator::visit(LetStatement * ls) {
     auto value = ls->value->accept(this);
     const auto varName = ls->name->tokenLiteral();
     auto ai = builder.CreateAlloca(
-        Utils::getLLVMTypeFromString(ls->name->type, context));
+        Utils::getLLVMType(ls->name->type, context));
     localValues[varName] = ai;
     return builder.CreateStore(value, ai);
 }
@@ -131,10 +171,6 @@ llvm::Value * LLVMGenerator::visit(FunctionInvokation * inv) {
     }
 
     for (const auto & arg : inv->args) {
-        // if (auto nested = dynamic_cast<FunctionInvokation *>(arg.get())) {
-        //     auto value = nested->accept(LLVMGenerator *v)
-        // }
-
         funcArgs.emplace_back(arg->accept(this));
     }
     return builder.CreateCall(func, funcArgs);
@@ -146,10 +182,7 @@ llvm::Value * LLVMGenerator::visit(ExpressionStatement * es) {
 
 llvm::Value * LLVMGenerator::visit(FunctionDefinition * def) {
     localValues.clear();
-    std::vector<llvm::Type *> params{};
-    for (const auto & arg : def->args) {
-        params.emplace_back(Utils::getLLVMType(arg->token.type, context));
-    }
+    funcArgs.clear();
     llvm::Function * func;
     if (def->isMain()) {
         func = module.getFunction("main");
@@ -157,6 +190,9 @@ llvm::Value * LLVMGenerator::visit(FunctionDefinition * def) {
         builder.SetInsertPoint(&entry);
     } else {
         func = module.getFunction(def->name->tokenLiteral());
+        for (auto & arg : func->args()) {
+            funcArgs[arg.getName().str()] = &arg;
+        }
         auto entry = llvm::BasicBlock::Create(context, "entry",func);
         builder.SetInsertPoint(entry);
     }
@@ -167,9 +203,7 @@ llvm::Value * LLVMGenerator::visit(FunctionDefinition * def) {
 
     const auto endsWithReturn = def->body.back()->isReturn();
 
-    for (const auto & stmt : def->body) {
-        stmt->accept(this);
-    }
+    def->body.accept(this);
 
     if (!endsWithReturn) {
         builder.CreateRetVoid();
@@ -178,4 +212,42 @@ llvm::Value * LLVMGenerator::visit(FunctionDefinition * def) {
     llvm::verifyFunction(*func);
 
     return func;
+}
+
+llvm::Value * LLVMGenerator::visit(IfStatement * ifs) {
+    auto fun = builder.GetInsertBlock()->getParent();
+    auto ifTrueBlock = llvm::BasicBlock::Create(context, "ifTrue", fun);
+    auto ifFalseBlock = llvm::BasicBlock::Create(context, "ifFalse", fun);
+    auto ifEndBlock = llvm::BasicBlock::Create(context, "ifEndBlock", fun);
+//    auto endBlock = llvm::BasicBlock::Create(context, "ifEnd");
+    auto condValue = ifs->mainBody.condition->accept(this);
+    builder.CreateCondBr(condValue, ifTrueBlock, ifFalseBlock);
+    builder.SetInsertPoint(ifTrueBlock);
+    ifs->mainBody.body.accept(this);
+
+    if (!ifs->mainBody.body.returns()) {
+        builder.CreateBr(ifEndBlock);
+    }
+
+    auto & elifs = ifs->elifBlocks;
+    if (!elifs.empty()) {
+        THROW("Elif not implemented yet", ifs->token);
+    }
+
+    builder.SetInsertPoint(ifFalseBlock);
+    ifs->elseBlock.body.accept(this);
+
+    if (!ifs->elseBlock.body.returns()) {
+        builder.CreateBr(ifEndBlock);
+    }
+
+    builder.SetInsertPoint(ifEndBlock);
+    return nullptr;
+}
+
+llvm::Value * LLVMGenerator::visit(Body * b) {
+    for (const auto & stmt : b->statements) {
+        stmt->accept(this);
+    }
+    return nullptr;
 }

@@ -28,6 +28,9 @@ struct StreamOut;
 struct IntegerLiteral;
 struct FunctionInvokation;
 struct ExpressionStatement;
+struct Body;
+struct IfStatement;
+struct Array;
 
 
 #define GEN llvm::Value *
@@ -43,6 +46,9 @@ public:
         , globalValues()
     {}
 
+    llvm::Type * getIntType();
+    llvm::ArrayType * getIntArrayType(unsigned int len);
+
     void initRuntime();
 
     void process(Program * program);
@@ -56,12 +62,16 @@ public:
     TODO(StreamOut)
     GEN visit(IntegerLiteral * integer);
     GEN visit(FunctionInvokation * inv);
+    GEN visit(Array * arr);
+
+    GEN visit(Body * b);
 
     // statements
     GEN visit(FunctionDefinition * def);
     GEN visit(ReturnStatement * ret);
     GEN visit(LetStatement * ls);
     GEN visit(ExpressionStatement * es);
+    GEN visit(IfStatement * ifs);
 
 private:
 
@@ -69,6 +79,7 @@ private:
     llvm::Module module;
     llvm::IRBuilder<> builder;
     Flow::Map<std::string, llvm::Value *> localValues;
+    Flow::Map<std::string, llvm::Argument *> funcArgs;
     Flow::Map<std::string, llvm::Value *> globalValues;
     Flow::Map<std::string, llvm::Function *> builtIns;
 };

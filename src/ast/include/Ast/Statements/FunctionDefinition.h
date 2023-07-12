@@ -10,7 +10,7 @@ struct FunctionDefinition : Statement {
         ptr<Identifier> && name,
         ptr<Identifier> && returnType,
         FunctionArgs && args,
-        std::vector<ptr<Statement>> && body
+        Body && body
     )
     : Statement(token)
     , name(std::move(name))
@@ -39,16 +39,11 @@ struct FunctionDefinition : Statement {
         if (returnType) {
             str += " -> " + returnType->toString();
         }
-        str += " {";
-
-        for (const auto & stmt : body) {
-            str += "    " + stmt->toString();
-        }
-        str += "}";
+        str += body.toString();
         return str;
     }
 
-    std::vector<ptr<Statement>> body;
+    Body body;
     ptr<Identifier> name;
     ptr<Identifier> returnType;
 

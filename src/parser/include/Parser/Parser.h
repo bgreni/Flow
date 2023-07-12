@@ -23,7 +23,7 @@ public:
         Product
     };
 
-    Parser(Lexer && lexer);
+    explicit Parser(Lexer && lexer);
 
     ptr<Program> parseProgram();
 private:
@@ -35,7 +35,7 @@ private:
         return false;
     }
     bool curTokenIs(FlowToken::Type t) { return mCurToken.type == t; }
-    bool peekTokenIs(FlowToken::Type t) { return mPeekToken.type == t; }
+    bool peekTokenIs(FlowToken::Type t) const { return mPeekToken.type == t; }
 
     OpPrecedence getPrecedence(FlowToken::Type t) {
         return cPrecedences.get(t).value_or(OpPrecedence::Lowest);
@@ -62,13 +62,17 @@ private:
     ptr<Lambda> parseLamda();
     ptr<BinaryOp> parseBinaryOp(ptr<Expression> && left);
     ptr<FunctionInvokation> parseFunctionInvokation();
+    ptr<Array> parseArray();
+    ptr<FlowType> parseType();
 
     ptr<Statement> parseStatement();
     ptr<LetStatement> parseLetStatement();
     ptr<ReturnStatement> parseReturnStatement();
     ptr<FunctionDefinition> parseFunctionDefinition();
     ptr<ExpressionStatement> parseExpressionStatement();
-    
+    ptr<IfStatement> parseIfStatement();
+
+    Body parseBody();
 
     Lexer mLexer;
 

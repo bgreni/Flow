@@ -69,6 +69,7 @@ Parser::Parser(Lexer && lexer)
     mPrefixParseFns[Type::INT_LIT] = [this]() { return parseIntegerLiteral(); };
     mPrefixParseFns[Type::BANG] = [this]() { return parsePrefixExpression(); };
     mPrefixParseFns[Type::FUNCTION] = [this]() { return parseLamda(); };
+    mPrefixParseFns[Type::LSQR] = [this]() { return parseArray(); };
 
     auto parseBinOp = [this](ptr<Expression> && left) { return parseBinaryOp(std::move(left)); };
     mInfixParseFns[Type::PLUS] = parseBinOp;
@@ -163,11 +164,34 @@ ptr<Identifier> Parser::parseIdentifier() {
     );
 }
 
+ptr<FlowType> Parser::parseType() {
+    if (peekTokenIs(Type::LSQR)) {
+        EXPECT_TOKEN(LSQR)
+        EXPECT_TYPE
+        const auto tok = mCurToken;
+        EXPECT_TOKEN(COMMA)
+        EXPECT_TOKEN(INT_LIT)
+        const auto count = parseIntegerLiteral()->value;
+        EXPECT_TOKEN(RSQR)
+        return std::make_unique<ArrType>(tok, count);
+    } else {
+        EXPECT_TYPE
+        switch (mCurToken.type) {
+            case Type::INT:
+                return std::make_unique<IntType>(mCurToken);
+            case Type::LAMBDA:
+                return std::make_unique<LambdaType>(mCurToken);
+        }
+    }
+    return nullptr;
+}
+
 ptr<IdentifierWithType> Parser::parseIdentifierWithType() {
     const auto nameToken = mCurToken;
     EXPECT_TOKEN(COLON)
-    EXPECT_TYPE;
-    auto type = mCurToken.literal;
+    std::unique_ptr<FlowType> type{};
+    type = std::move(parseType());
+
     return std::make_unique<IdentifierWithType>(
         nameToken,
         std::move(type)
@@ -199,26 +223,57 @@ ptr<Lambda> Parser::parseLamda() {
         }
     }
     EXPECT_TOKEN(RPAREN)
-    auto type = [this]() {
+    auto type = [this]() -> ptr<FlowType> {
         if (peekTokenIs(Type::ARROW)) {
             EXPECT_TOKEN(ARROW)
-            EXPECT_TYPE
-            return parseIdentifier();
+            return parseType();
         }
-        return std::make_unique<Identifier>(
-            Token(Type::IDENT, "void", mCurToken.line, mCurToken.column)
-        );
+        return std::make_unique<VoidType>();
     }();
-    EXPECT_TOKEN(LBRACK)
 
-    auto body = std::vector<ptr<Statement>>();
-    while (mPeekToken.type != Type::RBRACK) {
-        nextToken();
-        body.emplace_back(std::move(parseStatement()));
-    }
-    EXPECT_TOKEN(RBRACK)
+    auto body = parseBody();
 
     return std::make_unique<Lambda>(tok, std::move(args), std::move(body), std::move(type));
+}
+
+ptr<Array> Parser::parseArray() {
+    const auto token = mCurToken;
+    auto exprs = std::vector<ptr<Expression>>();
+    while (!peekTokenIs(Type::RSQR)) {
+        nextToken();
+        exprs.emplace_back(std::move(parseExpression()));
+        if (peekTokenIs(RSQR)) break;
+        EXPECT_TOKEN(COMMA)
+    }
+    EXPECT_TOKEN(RSQR);
+
+    // assert all items are of the same type
+    if (!std::all_of(
+        exprs.cbegin(),
+        exprs.cend(),
+        [&exprs](const ptr<Expression> & expr) {
+            return expr->token.type == exprs.front()->token.type;
+        })) {
+        throw ParserError("Elements of array are not all of the same type");
+    }
+
+    auto type = std::make_unique<ArrType>(LiteralTypeToToken(exprs.front()->token.type), exprs.size());
+    return std::make_unique<Array>(
+        token,
+        std::move(type),
+        std::move(exprs));
+}
+
+Body Parser::parseBody() {
+    EXPECT_TOKEN(LBRACK)
+
+    auto body = Body();
+    while (mPeekToken.type != Type::RBRACK) {
+        nextToken();
+        body.statements.emplace_back(std::move(parseStatement()));
+    }
+    EXPECT_TOKEN(RBRACK)
+    return body;
 }
 
 ptr<Statement> Parser::parseStatement() {
@@ -233,6 +288,8 @@ ptr<Statement> Parser::parseStatement() {
             if (peekTokenIs(Type::LPAREN)) {
                 return parseExpressionStatement();
             }
+        case Type::IF:
+            return parseIfStatement();
         default:
             throw ParserError(fmt::format("Cannot parse statement starting with: {}\nOf type: {}", mCurToken.literal, toString(mCurToken.type)));
     }
@@ -305,14 +362,7 @@ ptr<FunctionDefinition> Parser::parseFunctionDefinition() {
         );
     }();
 
-    EXPECT_TOKEN(LBRACK)
-
-    auto body = std::vector<ptr<Statement>>();
-    while (mPeekToken.type != Type::RBRACK) {
-        nextToken();
-        body.emplace_back(std::move(parseStatement()));
-    }
-    EXPECT_TOKEN(RBRACK)
+    auto body = parseBody();
 
     return std::make_unique<FunctionDefinition>(
         tok,
@@ -321,4 +371,41 @@ ptr<FunctionDefinition> Parser::parseFunctionDefinition() {
         std::move(args),
         std::move(body)
     );
+}
+
+ptr<IfStatement> Parser::parseIfStatement() {
+    const auto tok = mCurToken;
+    const auto parseClause = [&]() {
+        EXPECT_TOKEN(LPAREN)
+        nextToken();
+        auto cond = parseExpression();
+        EXPECT_TOKEN(RPAREN)
+        auto body = parseBody();
+        return IfStatement::Clause(
+            std::move(cond),
+            std::move(body)
+        );
+    };
+
+    auto ifClause = parseClause();
+
+    auto elifs = std::vector<IfStatement::Clause>();
+    while (peekTokenIs(Type::ELIF)) {
+        nextToken();
+        elifs.emplace_back(std::move(parseClause()));
+    }
+
+    auto elseBody = [&]() -> IfStatement::Clause {
+        if (peekTokenIs(Type::ELSE)) {
+            nextToken();
+            return {nullptr, parseBody()};
+        }
+        return IfStatement::Clause();
+    }();
+
+    return std::make_unique<IfStatement>(
+        tok,
+        std::move(ifClause),
+        std::move(elifs),
+        std::move(elseBody));
 }

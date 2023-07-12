@@ -6,6 +6,7 @@
 
 namespace FlowToken {
     struct Token {
+        Token() = default;
         Token(
             Type t,
             char c,
@@ -35,10 +36,10 @@ namespace FlowToken {
             return type == other.type && literal == other.literal;
         }
 
-        Type type;
-        std::string literal;
-        unsigned int line;
-        unsigned int column;
+        Type type = Type::END;
+        std::string literal = "";
+        unsigned int line = 0;
+        unsigned int column = 0;
     };
 
     using Tokens = std::vector<Token>;

@@ -7,8 +7,8 @@ struct Lambda : Expression {
     Lambda(
         const FlowToken::Token & token,
         FunctionArgs && args,
-        std::vector<ptr<Statement>> && body,
-        ptr<Identifier> && returnType
+        Body && body,
+        ptr<FlowType> && returnType
     )
     : Expression(token)
     , args(std::move(args))
@@ -31,15 +31,11 @@ struct Lambda : Expression {
         if (returnType) {
             str += " -> " + returnType->toString();
         }
-        str += " {";
-        for (const auto & stmt : body) {
-            str += "    " + stmt->toString();
-        }
-        str += "}";
+        str += body.toString();
         return str;
     }
 
     FunctionArgs args;
-    std::vector<ptr<Statement>> body;
-    ptr<Identifier> returnType;
+    Body body;
+    ptr<FlowType> returnType;
 };

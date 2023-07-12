@@ -31,6 +31,7 @@ int main(int argc, char** argv) {
         generator.process(program.get());
     } catch(const CodeGenError & e) {
         std::cout << "CodeGen failed: " << e.what() << std::endl;
+        return 1;
     }
 
     return 0;

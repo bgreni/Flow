@@ -11,8 +11,20 @@ namespace FlowToken {
         {"fn", Type::FUNCTION},
         {"int", Type::INT},
         {"void", Type::VOID},
-        {"lambda", Type::LAMBDA}
+        {"lambda", Type::LAMBDA},
+        {"if", Type::IF},
+        {"elif", Type::ELIF},
+        {"else", Type::ELSE},
     };
+
+    static Token LiteralTypeToToken(Type t) {
+        switch (t) {
+            case Type::INT_LIT:
+                return {Type::INT, "int", 0, 0};
+            default:
+                return {};
+        }
+    }
 
     static Type lookupIdent(std::string literal) {
         const auto it = cKeywords.find(literal);

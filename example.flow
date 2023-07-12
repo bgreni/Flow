@@ -1,11 +1,15 @@
 
 fn main() -> int {
     let a: int = 10 + 30 * 2;
-    print(a);
-    print(getNum());
+    if (5 > 10) {
+        print(888);
+    } else {
+        print(34);
+    }
+    print(doubleNum(20));
     return 0;
 }
 
-fn getNum() -> int {
-    return 125;
+fn doubleNum(a: int) -> int {
+    return a * 2;
 }

@@ -83,6 +83,12 @@ Token Lexer::nextToken() {
         case ')':
             t = Type::RPAREN;
             break;
+        case '[':
+            t = Type::LSQR;
+            break;
+        case ']':
+            t = Type::RSQR;
+            break;
         case '!':
             switch (mStream.peek()) {
                 case '=':
