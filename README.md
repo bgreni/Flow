@@ -1,7 +1,7 @@
 # Flow
 
 Flow is a statically typed, compiled toy language I created to learn about writing a compiler. With the lexer/parser portion being heavily based on the
-[how to write an interpreter in Go bool](https://interpreterbook.com/) by Thorsten Ball.
+[how to write an interpreter in Go book](https://interpreterbook.com/) by Thorsten Ball.
 
 This is a work in progress, but eventually I plan on supporting all features listed here, using an llvm backend to compile to static executable.
 
@@ -56,6 +56,24 @@ let result: [int, 2] = [10, 20] >> doubleNums() >> doubleNums();
 ```
 In this example, the array [10, 20] is matched to the expected arguments of the "doubleNums" function, and the result of the
 call is fed into another call to the function, and then the result is assigned to the result var
+
+### Example program
+```
+fn main() -> int {
+    let a: int = 10 + 30 * 2;
+    if (5 > 10) {
+        print(888);
+    } else {
+        print(34);
+    }
+    print(doubleNum(20));
+    return 0;
+}
+
+fn doubleNum(a: int) -> int {
+    return a * 2;
+}
+```
 
 # Documentation TODO
 - Loops
