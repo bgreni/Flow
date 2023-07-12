@@ -29,6 +29,9 @@ int main(int argc, char** argv) {
     try {
         auto generator = LLVMGenerator();
         generator.process(program.get());
+        std::system((std::string("llc --filetype=obj ") + generator.outName()).c_str());
+        std::system("gcc out.o");
+        std::system("./a.out");
     } catch(const CodeGenError & e) {
         std::cout << "CodeGen failed: " << e.what() << std::endl;
         return 1;

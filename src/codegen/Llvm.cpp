@@ -79,7 +79,7 @@ void LLVMGenerator::process(Program * program) {
          throw CodeGenError("\n\n\n" + outs.str());
      }
     std::error_code c;
-    llvm::raw_fd_ostream out("../out.ll", c);
+    llvm::raw_fd_ostream out(outName(), c);
     module.print(out, nullptr);
 }
 

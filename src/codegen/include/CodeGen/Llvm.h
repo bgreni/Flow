@@ -51,6 +51,8 @@ public:
 
     void initRuntime();
 
+    std::string outName() { return "out.ll"; }
+
     void process(Program * program);
 
     // expressions
